@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 import Note from "../components/Note";
-// import '../components/App.css';
 
 class Home extends Component {
 
@@ -15,7 +14,7 @@ class Home extends Component {
   updateNoteText(noteText){
     this.setState({noteText: noteText.target.value})
   }
-
+  
   addNote() {
     if (this.state.noteText === '') {return}
     let noteArr = this.state.notes;
