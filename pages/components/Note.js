@@ -1,14 +1,9 @@
-import React, { Component } from 'react';
+import React from 'react';
 
-class Note extends Component {
-
-  render() {
-    return (
-        <div className="note" onClick={this.props.deleteMethod}>
-            {this.props.text}
-        </div>
-    );
-  }
-}
+const Note = ({ deleteMethod, title }) => (
+  <div className="note" onClick={deleteMethod}>
+    {title}
+  </div>
+);
 
 export default Note;
