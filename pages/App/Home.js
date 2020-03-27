@@ -1,64 +1,67 @@
-import React, { Component } from 'react';
-import Note from "../components/Note";
+import React, { useState, useRef } from 'react';
+import { useQuery, useMutation } from '@apollo/react-hooks';
+import Note from '../components/Note';
+import { FETCH_TODOS, ADD, DESTROY } from '../queries/todos';
 
-class Home extends Component {
+function Home() {
+  const input = useRef(null);
+  const [notes, setNotes] = useState([]);
+  const [noteText, setNoteText] = useState('');
+  const fetchedTodos = useQuery(FETCH_TODOS);
+  const [addTodo] = useMutation(ADD);
+  const [destroyTodo] = useMutation(DESTROY);
 
-  constructor(props) {
-    super(props);
-    this.state= {
-      noteText: '',
-      notes: [],
+  function setNotesState() {
+    setNotes([...notes, { title: noteText, completed: false, id: `${noteText}${Math.random()}` }]);
+    setNoteText('');
+  }
+
+  function updateNoteText(e) {
+    const { value } = e.target;
+    setNoteText(value);
+  }
+
+  async function addNote() {
+    if (noteText === '') return null;
+    setNotesState();
+    await addTodo({ variables: { title: noteText } });
+    fetchedTodos.refetch();
+    input.current.focus();
+  }
+
+  function handleKeyPress({ key }) {
+    if (key === "Enter") {
+      setNotesState();
     }
   }
 
-  updateNoteText(noteText){
-    this.setState({noteText: noteText.target.value})
-  }
-  
-  addNote() {
-    if (this.state.noteText === '') {return}
-    let noteArr = this.state.notes;
-    noteArr.push(this.state.noteText);
-    this.setState({ noteText: ''});
-    this.textInput.focus();
+  function deleteNote(id) {
+    setNotes([...notes.filter(note => note.id !== id)]);
+    destroyTodo({ variables: { id } });
   }
 
-  handleKeyPress = (event) => {
-    if(event.key === "Enter"){
-      let noteArr = this.state.notes;
-      noteArr.push(this.state.noteText);
-      this.setState({ noteText: ''});
-    }
+  function renderNotes() {
+    return notes.map(({ title, id }) => (
+      <Note key={id} title={title} deleteMethod={() => deleteNote(id)} />
+    ));
   }
 
-  deleteNote (index){
-    let noteArr = this.state.notes;
-    noteArr.splice(index, 1);
-    this.setState({ notes: noteArr })
-  }
-
-  render() {
-
-    let notes = this.state.notes.map((val, key) => {
-      return <Note key={key} text={val}
-      deleteMethod={ () => this.deleteNote(key) }
-       />
-    })
-
-    return (
-      <div className="container">
-        <div className="header">Todo App</div>
-        {notes}
-        <div className="button" onClick={this.addNote.bind(this)}>+</div>
-        <input placeholder="Enter Notes" type="text" className="input"
-        ref={((input) => {this.textInput = input})}
-        value={this.state.noteText}
-        onChange={noteText => this.updateNoteText(noteText)}
-        onKeyPress={this.handleKeyPress.bind(this)}
-        />
-      </div>
-    );
-  }
+  return (
+    <div className="container">
+      <div className="header">Todo App</div>
+      {renderNotes()}
+      <div className="button" onClick={addNote}>+</div>
+      <input 
+        placeholder="Enter Notes" 
+        className="input"
+        type="text"
+        value={noteText} 
+        ref={input}
+        onKeyPress={handleKeyPress}
+        onChange={updateNoteText}
+      />
+    </div>
+  )
 }
 
 export default Home;
